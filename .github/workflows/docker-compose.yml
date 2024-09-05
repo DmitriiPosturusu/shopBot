@@ -40,7 +40,7 @@ jobs:
 
       # Step 5: Display Docker Compose logs for debugging
       - name: Display Docker Compose logs
-        run: docker-compose -f docker-compose/docker-compose.yml logs
+        run: docker-compose -f docker-compose/docker-compose.yml logs app
 
       # Step 6: Teardown Docker Compose services after testing
       - name: Teardown Docker Compose
