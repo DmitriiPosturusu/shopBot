@@ -139,7 +139,11 @@ services:
             "management.endpoint.prometheus.enabled" : "true",
             "management.endpoint.health.show-details" : "always",
             "management.endpoint.metrics.enabled" : "true",
-            "management.prometheus.metrics.export.enabled" : "true"
+            "management.prometheus.metrics.export.enabled" : "true",
+            "app.aws.access-key-id" : "${AWS_ACCESS_KEY_ID}",
+            "app.aws.secret-access-key" : "${AWS_SECRET_ACCESS_KEY}",
+            "app.aws.s3-region" : "${AWS_S3_REGION}",
+            "app.aws.s3-bucket-name" : "${AWS_S3_BUCKET_NAME}"
           }'
 networks:
   postgres:

@@ -16,7 +16,7 @@ public class BotConfig {
     @Value("${bot.key}")
     private String botKey;
 
-    @Value("${app.aws.s3-backet-name}")
+    @Value("${app.aws.s3-bucket-name}")
     private String bucketName;
 
 
