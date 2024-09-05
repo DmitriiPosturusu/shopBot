@@ -1,11 +1,11 @@
-name: Docker Compose with Secrets
+name: Docker Compose Test with Secrets
 
 # Trigger the workflow on push and pull request events
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  workflow_run:
+    workflows: [Build and Push Docker Image]
+    types:
+      - completed
 
 jobs:
   docker-compose-test:
