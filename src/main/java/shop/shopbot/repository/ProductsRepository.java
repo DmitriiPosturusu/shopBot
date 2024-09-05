@@ -5,11 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import shop.shopbot.model.Product;
 
 import java.util.List;
 
+@Repository
 public interface ProductsRepository extends JpaRepository<Product, Long> {
 
     @Query(value = "SELECT * FROM products p WHERE p.category_id=:category_id and p.product_available=true", nativeQuery = true)
