@@ -1,0 +1,54 @@
+groups:
+  - name: db-rules
+    rules:
+      - alert: PostgresqlDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Postgresql down (instance {{ $labels.instance }})
+          description: "Postgresql instance is down  VALUE = {{ $value }}  LABELS = {{ $labels }} for more than 1 minute."
+      - alert: PostgresqlTooManyConnections
+        expr: sum by (instance, job, server) (pg_stat_activity_count) > min by (instance, job, server) (pg_settings_max_connections * 0.8)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Postgresql too many connections (instance {{ $labels.instance }})
+          description: "PostgreSQL instance has too many connections (> 80%).  VALUE = {{ $value }}  LABELS = {{ $labels }} for more than 5 minute."
+      - alert: PostgresqlExporterError
+        expr: pg_exporter_last_scrape_error > 0
+        for: 1m
+        labels:
+           severity: critical
+        annotations:
+          summary: Postgresql exporter error (instance {{ $labels.instance }})
+          description: "Postgresql exporter is showing errors. A query may be buggy in query.yaml  VALUE = {{ $value }}  LABELS = {{ $labels}} ."
+  - name: app-rules
+    rules:
+      # Triggers a critical alert if a server is down for more than 5 minute.
+      - alert: ServerDown
+        expr: up < 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Server {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+      - alert: HighMemoryUsage
+        expr: (jvm_memory_bytes_used{area="heap"} / jvm_memory_bytes_max{area="heap"}) > 0.85
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage detected on {{ $labels.instance }}"
+          description: "Heap memory usage is above 85% for the last 2 minutes."
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[1m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU Usage Detected"
+          description: "CPU usage has been above 80% for the last 5 minutes."    

@@ -1,0 +1,155 @@
+version: '3.5'
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres:15.4
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /data/postgres
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+    networks:
+      - postgres
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${POSTGRES_DB_NAME} -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - '5050:80'
+    networks:
+      - postgres
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+  postgres_exporter:
+    container_name: exporter_container
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - '${POSTGRES_EXPORTER_PORT}:${POSTGRES_EXPORTER_PORT}'
+    restart: unless-stopped
+    volumes:
+      - postgres_exporter:/etc/postgres_exporter/postgres_exporter
+    depends_on:
+      prometheus:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 500M
+    networks:
+      - postgres
+  prometheus:
+    image: prom/prometheus
+    container_name: app_prometheus
+    restart: unless-stopped
+    networks:
+      - postgres
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./docker/prometheus/:/etc/prometheus/
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+  grafana:
+    image: grafana/grafana
+    container_name: app_grafana
+    ports:
+      - '3000:3000'
+    networks:
+      - postgres
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: false
+    restart: unless-stopped
+    volumes:
+      - grafana:/grafana
+  alertmanager:
+    image: prom/alertmanager
+    container_name: app_alertmanager
+    networks:
+      - postgres
+    ports:
+      - '9093:9093'
+    volumes:
+      - ./docker/alert-manager/:/etc/alert-manager/
+      - ./docker/alert-manager/config:/etc/alert-manager/config
+    command: --config.file=/etc/alert-manager/config/alertmanager.yml
+  app:
+    container_name: app_container
+    image: dima01211/shopbot
+    volumes:
+      - /data/springboot-app
+    networks:
+      - postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
+    environment:
+      SPRING_APPLICATION_JSON: '{
+            "spring.datasource.url"  : "jdbc:postgresql://postgres:5432/prod_db",
+            "spring.datasource.username" : "${POSTGRES_USER}",
+            "spring.datasource.password" : "${POSTGRES_PASSWORD}",
+            "spring.jpa.properties.hibernate.dialect" : "org.hibernate.dialect.PostgreSQLDialect",
+            "spring.jpa.hibernate.ddl-auto" : "none",
+            "management.endpoints.web.exposure.include" : "*",
+            "management.endpoint.prometheus.enabled" : "true",
+            "management.endpoint.health.show-details" : "always",
+            "management.endpoint.metrics.enabled" : "true",
+            "management.prometheus.metrics.export.enabled" : "true"
+          }'
+networks:
+  postgres:
+    driver: bridge
+volumes:
+  postgres_exporter:
+    name: app-postgres-exporter
+  postgres:
+    name: app-postgres
+  pgadmin:
+    name: app-pgadmin
+  alertmanager:
+    name: app-alermanager
+  grafana:
+    name: app-grafana
+  prometheus:
+    name: app-prometheus
+  app:
+    name: springboot-app

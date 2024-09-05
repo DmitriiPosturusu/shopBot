@@ -1,0 +1,10 @@
+route:
+  receiver: alert-manager
+  repeat_interval: 10m
+receivers:
+  - name: 'alert-manager'
+    telegram_configs:
+      - bot_token: *
+        api_url: https://api.telegram.org
+        chat_id: *
+        parse_mode: ''
