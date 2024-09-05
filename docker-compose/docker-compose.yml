@@ -113,6 +113,12 @@ services:
   app:
     container_name: app_container
     image: dima01211/shopbot
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail http://localhost:8080/actuator/health || exit 1" ]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
     volumes:
       - /data/springboot-app
     networks:
