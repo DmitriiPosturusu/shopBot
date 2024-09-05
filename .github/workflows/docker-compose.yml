@@ -1,0 +1,48 @@
+name: Docker Compose with Secrets
+
+# Trigger the workflow on push and pull request events
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  docker-compose-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Docker Buildx (for Docker Compose compatibility)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Set up Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose -y
+
+      # Step 4: Run Docker Compose using environment variables from secrets
+      - name: Run Docker Compose with env
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB_NAME: ${{ secrets.POSTGRES_DB_NAME }}
+          PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+          PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+          GRAFANA_USER: ${{ secrets.GRAFANA_USER }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
+        run: docker-compose -f docker-compose/docker-compose.yml up -d
+
+      # Step 5: Display Docker Compose logs for debugging
+      - name: Display Docker Compose logs
+        run: docker-compose -f docker-compose/docker-compose.yml logs
+
+      # Step 6: Teardown Docker Compose services after testing
+      - name: Teardown Docker Compose
+        if: always()  # Ensures teardown runs even if previous steps fail
+        run: docker-compose -f docker-compose/docker-compose.yml down
