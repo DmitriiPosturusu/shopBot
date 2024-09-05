@@ -83,7 +83,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             this.execute(new SetMyCommands(botCommandList, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
-            log.error(e.getMessage());
+            log.error("Exception :", e);
         }
 
         this.categoryService = categoryService;
@@ -245,7 +245,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     downloadFile(filePath, outputFile);
                     sendMessage(update.getMessage().getChatId(), "Success");
                 } catch (Exception e) {
-                    log.error("Exception :" + e);
+                    log.error("Exception :", e);
                 }
             }
 
@@ -265,7 +265,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 downloadFile(file, new File(fileName));
 
             } catch (TelegramApiException e) {
-                log.error("Exception :" + e);
+                log.error("Exception :", e);
             }
 
         }
@@ -286,7 +286,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 fos.write(inputStream.readAllBytes());
                 log.info("Create file with name : [" + objectSummary.getKey() + "]");
             } catch (IOException e) {
-                log.error("Exception :" + e);
+                log.error("Exception :", e);
             }
         }
         sendMessage(chatId, "Success");
@@ -329,7 +329,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             jobLauncher.run(csvImporterJob, new JobParameters());
             sendMessage(chatId, "Success");
         } catch (Exception e) {
-            log.error("Error occurred :" + e.getMessage());
+            log.error("Exception :", e);
             sendMessage(chatId, "Failed");
         }
     }
@@ -660,7 +660,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
             log.info("Send message : [" + message + "] , to UserId : [" + chatId + "]");
         } catch (TelegramApiException e) {
-            log.error("Error occurred :" + e.getMessage());
+            log.error("Exception :", e);
         }
     }
 
@@ -674,7 +674,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(sendPhoto);
             log.info("Send photo : [ ] , to UserId : [" + chatId + "]");
         } catch (TelegramApiException e) {
-            log.error("Error occurred :" + e.getMessage());
+            log.error("Exception :", e);
         }
     }
 
@@ -685,7 +685,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
             log.info("Send message : " + message + ", to UserId : [" + chatId + "]");
         } catch (TelegramApiException e) {
-            log.error("Error occurred :" + e.getMessage());
+            log.error("Exception :", e);
         }
     }
 
@@ -695,7 +695,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(answer);
             log.info("Send callback message  : to CallBackId : [" + callback_id + "] , answer : [" + answer + "]");
         } catch (TelegramApiException e) {
-            log.error("Error occurred :" + e.getMessage());
+            log.error("Exception :", e);
         }
     }
 }
