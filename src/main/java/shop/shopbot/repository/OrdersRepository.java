@@ -6,19 +6,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
-import shop.shopbot.model.Orders;
+import shop.shopbot.model.Order;
 import shop.shopbot.model.Product;
 import shop.shopbot.model.User;
 
 import java.util.List;
 
-public interface OrdersRepository extends JpaRepository<Orders, Long> {
+public interface OrdersRepository extends JpaRepository<Order, Long> {
 
     boolean existsByProductAndUserAndStatus(Product productId, User chatId, String status);
 
-    List<Orders> findAllByUser(User user);
+    List<Order> findAllByUser(User user);
 
-    List<Orders> findAllByUserAndStatusEquals(User user, String status);
+    List<Order> findAllByUserAndStatusEquals(User user, String status);
 
 
     //clear cache

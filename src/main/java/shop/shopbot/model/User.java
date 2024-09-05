@@ -42,5 +42,9 @@ public class User {
     @Column(name = "language")
     private String language;
 
+    public User(Long chatId) {
+        this.chatId = chatId;
+    }
+
 
 }

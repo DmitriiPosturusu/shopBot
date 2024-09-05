@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,12 +20,15 @@ public class Product {
     @Id
     @Column(name = "product_id")
     private Long productId;
-
     @Column(name = "product_name_en")
     private String productNameEn;
 
     @Column(name = "product_name_ro")
     private String productNameRo;
+
+    @Column(name = "product_price")
+    private BigDecimal productPrice;
+
 
     @Column(name = "product_descr_en", columnDefinition = "TEXT")
     private String productDescriptionEn;
@@ -38,5 +43,7 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Category categories;
 
-
+    public Product(Long productId) {
+        this.productId = productId;
+    }
 }
