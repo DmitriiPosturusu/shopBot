@@ -65,4 +65,77 @@ public class LanguageRo implements Language {
 
     @Value("${ro.text.phoneNumber}")
     private String textPhoneNumber;
+
+    @Value("${ro.text.weekOffer}")
+    private String weekOffer;
+
+    @Value("${ro.text.startCommand}")
+    private String startCommand;
+
+    @Value("${ro.text.menuCommand}")
+    private String menuCommand;
+
+    @Value("${ro.text.productListCommand}")
+    private String productListCommand;
+
+    @Value("${ro.text.productListCommandEmpty}")
+    private String productListCommandEmpty;
+
+    @Value("${ro.text.categoryByProduct}")
+    private String categoryByProduct;
+
+    @Value("${ro.text.quantity}")
+    private String textQuantity;
+
+    @Value("${ro.text.buildOrder}")
+    private String textBuildOrder;
+
+    @Value("${ro.text.shoppingCommandEmpty}")
+    private String shoppingCommandEmpty;
+
+    @Value("${ro.text.finalPrice}")
+    private String finalPrice;
+
+    @Value("${ro.text.confirmQuantityOrders}")
+    private String confirmQuantityOrders;
+
+    @Value("${ro.text.editOrders}")
+    private String editOrders;
+
+    @Value("${ro.text.editProducts}")
+    private String editProducts;
+
+    @Value("${ro.text.confirmProductRemove}")
+    private String confirmProductRemove;
+
+    @Value("${ro.text.editQuantity}")
+    private String editQuantity;
+
+    @Value("${ro.text.confirmQuantity}")
+    private String confirmQuantity;
+
+    @Value("${ro.alert.phoneNumber}")
+    private String alertPhoneNumber;
+
+    @Value("${ro.text.settingCommand}")
+    private String settingCommand;
+
+
+    @Value("${ro.text.settingPhoneNumber}")
+    private String settingPhoneNumber;
+
+
+    @Value("${ro.text.support}")
+    private String textSupport;
+
+    @Value("${ro.text.adminCommand}")
+    private String adminCommand;
+
+    @Value("${ro.text.adminCommandEdit}")
+    private String adminCommandEdit;
+
+    @Value("${ro.text.weekDays}")
+    private String weekDays;
+
+
 }

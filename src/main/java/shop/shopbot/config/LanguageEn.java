@@ -67,5 +67,74 @@ public class LanguageEn implements Language {
     @Value("${en.text.phoneNumber}")
     private String textPhoneNumber;
 
+    @Value("${en.text.weekOffer}")
+    private String weekOffer;
+
+    @Value("${en.text.startCommand}")
+    private String startCommand;
+
+    @Value("${en.text.menuCommand}")
+    private String menuCommand;
+
+    @Value("${en.text.productListCommand}")
+    private String productListCommand;
+
+    @Value("${en.text.productListCommandEmpty}")
+    private String productListCommandEmpty;
+
+    @Value("${en.text.categoryByProduct}")
+    private String categoryByProduct;
+
+    @Value("${en.text.quantity}")
+    private String textQuantity;
+
+    @Value("${en.text.buildOrder}")
+    private String textBuildOrder;
+
+    @Value("${en.text.shoppingCommandEmpty}")
+    private String shoppingCommandEmpty;
+
+    @Value("${en.text.finalPrice}")
+    private String finalPrice;
+
+    @Value("${en.text.confirmQuantityOrders}")
+    private String confirmQuantityOrders;
+
+    @Value("${en.text.editOrders}")
+    private String editOrders;
+
+    @Value("${en.text.editProducts}")
+    private String editProducts;
+
+    @Value("${en.text.confirmProductRemove}")
+    private String confirmProductRemove;
+
+    @Value("${en.text.editQuantity}")
+    private String editQuantity;
+
+    @Value("${en.text.confirmQuantity}")
+    private String confirmQuantity;
+
+    @Value("${en.alert.phoneNumber}")
+    private String alertPhoneNumber;
+
+    @Value("${en.text.settingCommand}")
+    private String settingCommand;
+
+    @Value("${en.text.settingPhoneNumber}")
+    private String settingPhoneNumber;
+
+    @Value("${en.text.support}")
+    private String textSupport;
+
+
+    @Value("${en.text.adminCommand}")
+    private String adminCommand;
+
+    @Value("${en.text.adminCommandEdit}")
+    private String adminCommandEdit;
+
+    @Value("${en.text.weekDays}")
+    private String weekDays;
 
 }
