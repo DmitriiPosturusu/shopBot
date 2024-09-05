@@ -11,6 +11,7 @@ import shop.shopbot.model.Order;
 import shop.shopbot.model.Product;
 import shop.shopbot.model.User;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -26,8 +27,8 @@ public interface OrdersRepository extends JpaRepository<Order, Long> {
     //clear cache
     @Transactional
     @Modifying(clearAutomatically = true)
-    @Query(value = "update orders set quantity=:quantity where order_id=:orderId", nativeQuery = true)
-    void updateQuantityByOrderId(@Param(value = "orderId") long orderId, @Param(value = "quantity") String quantity);
+    @Query(value = "update orders set quantity=:quantity,total_price=:totalPrice where order_id=:orderId", nativeQuery = true)
+    void updateQuantityByOrderId(@Param(value = "orderId") long orderId, @Param(value = "quantity") String quantity, @Param(value = "totalPrice") BigDecimal totalPrice);
 
 
     @Transactional
