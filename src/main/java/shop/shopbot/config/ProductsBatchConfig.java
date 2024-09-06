@@ -3,6 +3,7 @@ package shop.shopbot.config;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -15,17 +16,21 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 import shop.shopbot.model.Category;
 import shop.shopbot.model.Product;
+import shop.shopbot.service.TelegramBot;
 
 @Configuration
 @EnableBatchProcessing
 public class ProductsBatchConfig {
 
+    @Autowired
+    private CustomJobExecutionListener jobExecutionListener;
 
     @Bean
     @StepScope
@@ -63,6 +68,7 @@ public class ProductsBatchConfig {
                 .incrementer(new RunIdIncrementer())
                 .flow(customerStep)
                 .end()
+                .listener(jobExecutionListener)
                 .build();
     }
 
@@ -77,5 +83,7 @@ public class ProductsBatchConfig {
                 .allowStartIfComplete(true)
                 .build();
     }
+
+
 
 }
