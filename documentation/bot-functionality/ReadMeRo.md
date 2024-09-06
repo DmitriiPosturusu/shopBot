@@ -2,7 +2,7 @@
 
 Acest bot Telegram oferă o gamă largă de funcții care se adresează atât utilizatorilor obișnuiți, cât și administratorilor, îmbunătățind interacțiunea și gestionarea în cadrul platformei.
 
-Pentru mai multa information despre funtionalitatea bot-lui vizitati [https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_ro.txt](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_en.txt) 
+Pentru mai multa information despre funtionalitatea bot-lui vizitati [Bot commands documentatie.](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_ro.txt) 
 
 ---
 

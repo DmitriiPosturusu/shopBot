@@ -2,7 +2,7 @@
 
 This Telegram bot offers a wide range of features catering to both regular users and administrators, enhancing interaction and management within the platform.
 
-For more information about bot functionality please visit [https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_en.txt](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_en.txt)
+For more information about bot functionality please visit [Bot commands documentation.](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-command/bot_command_en.txt)
 
 ---
 
