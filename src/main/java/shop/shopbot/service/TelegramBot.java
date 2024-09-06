@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -24,10 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import shop.shopbot.config.BotConfig;
-import shop.shopbot.config.Language;
-import shop.shopbot.config.LanguageEn;
-import shop.shopbot.config.LanguageRo;
+import shop.shopbot.config.*;
 import shop.shopbot.model.Order;
 import shop.shopbot.model.User;
 import shop.shopbot.utility.UtilityService;
@@ -65,7 +63,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final TelegramService telegramService;
 
 
-    public TelegramBot(BotConfig config, LanguageEn languageEn, LanguageRo languageRo, JobLauncher jobLauncher, Job csvImporterJob, UserService userService, OrderService orderService, ProductService productService, CategoryService categoryService, TelegramService telegramService, AmazonS3 s3Client) {
+    private final CustomJobExecutionListener jobExecutionListener;
+
+
+    public TelegramBot(BotConfig config, LanguageEn languageEn, LanguageRo languageRo, JobLauncher jobLauncher, Job csvImporterJob, UserService userService, OrderService orderService, ProductService productService, CategoryService categoryService, TelegramService telegramService, AmazonS3 s3Client, CustomJobExecutionListener jobExecutionListener) {
         this.config = config;
         this.languageEn = languageEn;
         this.languageRo = languageRo;
@@ -74,6 +75,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.userService = userService;
         this.orderService = orderService;
         this.productService = productService;
+        this.categoryService = categoryService;
+        this.telegramService = telegramService;
+        this.s3Client = s3Client;
+        this.jobExecutionListener = jobExecutionListener;
         List<BotCommand> botCommandList = new ArrayList<>();
         botCommandList.add(new BotCommand("/start", "Get a welcome message"));
         botCommandList.add(new BotCommand("/menu", "Get a menu"));
@@ -86,9 +91,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Exception :", e);
         }
 
-        this.categoryService = categoryService;
-        this.telegramService = telegramService;
-        this.s3Client = s3Client;
+
     }
 
 
@@ -111,13 +114,14 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.info("Received message from UserId : [" + chatId + "] , Message : [" + message + "]]");
 
             if (message.startsWith("/send")) {
-                var owner = userService.findById(chatId);
-                if (owner != null && owner.getPrivilege() > 0) {
+                if (userService.checkIsAdmin(chatId)) {
                     String msg = message.substring(message.indexOf(" "));
                     var users = userService.findAll();
                     for (User user : users) {
                         sendMessage(user.getChatId(), msg);
                     }
+                } else {
+                    sendMessage(chatId, "Only admin can use send command");
                 }
             } else if (message.startsWith("/sendme")) {
                 sendMessage(chatId, message.substring(message.indexOf(" ")));
@@ -150,7 +154,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case "/admin":
                     adminCommandReceived(chatId);
                     break;
-                case "/import":
+                case "/importProduct":
                     runBatchJobImportProductFromCsv(chatId);
                     adminCommandReceived(chatId);
                     break;
@@ -158,7 +162,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     importPicturesFromAws(chatId);
                     break;
                 default:
-                    //to do
+                    break;
 
             }
         } else if (update.hasCallbackQuery()) {
@@ -231,65 +235,82 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
 
         if (update.hasMessage() && update.getMessage().hasDocument()) {
-            //To do
-            //check if is admin
-            var document = update.getMessage().getDocument();
-            if (document.getMimeType().equals("text/csv")) {
-                GetFile getFile = new GetFile();
-                getFile.setFileId(document.getFileId());
-                try {
-                    String filePath = execute(getFile).getFilePath();
-                    File outputFile = new File("tmpProducts.csv");
-                    boolean status = outputFile.createNewFile();
-                    log.info("New tmp file was created : [" + status + "] , in location [" + outputFile.getPath() + "]");
-                    downloadFile(filePath, outputFile);
-                    sendMessage(update.getMessage().getChatId(), "Success");
-                } catch (Exception e) {
-                    log.error("Exception :", e);
+            long chatId = update.getMessage().getChatId();
+            if (userService.checkIsAdmin(chatId)) {
+                var document = update.getMessage().getDocument();
+                log.info("Received document from UserId :[" + chatId + "] with type : [" + document.getMimeType() + "]");
+                if (document.getMimeType().equals("text/csv")) {
+                    GetFile getFile = new GetFile();
+                    getFile.setFileId(document.getFileId());
+                    try {
+                        String filePath = execute(getFile).getFilePath();
+                        File outputFile = new File("tmpProducts.csv");
+                        boolean status = outputFile.createNewFile();
+                        log.info("New tmp file was created : [" + status + "] , in location [" + outputFile.getPath() + "]");
+                        downloadFile(filePath, outputFile);
+                        sendMessage(chatId, "Success");
+                    } catch (Exception e) {
+                        log.error("Exception :", e);
+                    }
                 }
+            } else {
+                sendMessage(chatId, "Only admin can send document");
             }
+
 
         }
         if (update.hasMessage() && update.getMessage().hasPhoto()) {
-            //TODO
-            //check if is admin
-            var photos = update.getMessage().getPhoto();
-            if (photos.isEmpty()) {
-                return;
-            }
-            var photo = photos.get(3);
-            String fileName = update.getMessage().getCaption() + ".png";
-            GetFile getFile = new GetFile(photo.getFileId());
-            try {
-                org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
-                downloadFile(file, new File(fileName));
+            long chatId = update.getMessage().getChatId();
+            if (userService.checkIsAdmin(chatId)) {
+                var photos = update.getMessage().getPhoto();
+                if (photos.isEmpty()) {
+                    return;
+                }
+                //get photo 3 with max resolution
+                var photo = photos.get(3);
+                String fileName = update.getMessage().getCaption() + ".png";
+                GetFile getFile = new GetFile(photo.getFileId());
+                try {
+                    org.telegram.telegrambots.meta.api.objects.File file = execute(getFile);
+                    downloadFile(file, new File(fileName));
+                    log.info("New photo was created in location [" + file + "]");
+                } catch (TelegramApiException e) {
+                    log.error("Exception :", e);
+                }
 
-            } catch (TelegramApiException e) {
-                log.error("Exception :", e);
+            } else {
+                sendMessage(chatId, "Only admin can send photo");
             }
+
 
         }
 
     }
 
     private void importPicturesFromAws(long chatId) {
-        ObjectListing objectListing = s3Client.listObjects(config.getBucketName());
-        List<S3ObjectSummary> objectSummaries = objectListing.getObjectSummaries();
-        log.info("Bucket with name :[" + config.getBucketName() + "] have : [" + objectSummaries.toString() + "]");
-        if (objectSummaries.isEmpty()) {
-            sendMessage(chatId, "Folder is empty");
-        }
-        for (S3ObjectSummary objectSummary : objectSummaries) {
-            S3Object s3Object = s3Client.getObject(config.getBucketName(), objectSummary.getKey());
-            S3ObjectInputStream inputStream = s3Object.getObjectContent();
-            try (FileOutputStream fos = new FileOutputStream(objectSummary.getKey())) {
-                fos.write(inputStream.readAllBytes());
-                log.info("Create file with name : [" + objectSummary.getKey() + "]");
-            } catch (IOException e) {
-                log.error("Exception :", e);
+        if (userService.checkIsAdmin(chatId)) {
+            ObjectListing objectListing = s3Client.listObjects(config.getBucketName());
+            List<S3ObjectSummary> objectSummaries = objectListing.getObjectSummaries();
+            log.info("Bucket with name :[" + config.getBucketName() + "] have : [" + objectSummaries.toString() + "]");
+            if (objectSummaries.isEmpty()) {
+                sendMessage(chatId, "Folder is empty");
             }
+            for (S3ObjectSummary objectSummary : objectSummaries) {
+                S3Object s3Object = s3Client.getObject(config.getBucketName(), objectSummary.getKey());
+                S3ObjectInputStream inputStream = s3Object.getObjectContent();
+                try (FileOutputStream fos = new FileOutputStream(objectSummary.getKey())) {
+                    fos.write(inputStream.readAllBytes());
+                    log.info("Create file with name : [" + objectSummary.getKey() + "]");
+                } catch (IOException e) {
+                    sendMessage(chatId, "Failed");
+                    log.error("Exception :", e);
+                }
+            }
+            sendMessage(chatId, "Success");
+        } else {
+            sendMessage(chatId, "Only admin can send importPictures command");
         }
-        sendMessage(chatId, "Success");
+
 
     }
 
@@ -321,66 +342,75 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 
     private void runBatchJobImportProductFromCsv(long chatId) {
-        //TODO
-        //check if is admin
-        try {
-            //
-
-            jobLauncher.run(csvImporterJob, new JobParameters());
-            sendMessage(chatId, "Success");
-        } catch (Exception e) {
-            log.error("Exception :", e);
-            sendMessage(chatId, "Failed");
+        if (userService.checkIsAdmin(chatId)) {
+            try {
+                JobParameters jobParameters = new JobParametersBuilder()
+                        .addString("chatId", String.valueOf(chatId))
+                        .addLong("currentTime", System.currentTimeMillis())
+                        .toJobParameters();
+                jobLauncher.run(csvImporterJob, jobParameters);
+            } catch (Exception e) {
+                log.error("Exception :", e);
+                sendMessage(chatId, "Failed");
+            }
+        } else {
+            sendMessage(chatId, "Only admin can send importProduct command");
         }
+
     }
 
     private void disableProduct(Long chatId, String callbackData, String callbackId) {
-        //to do
-        //check if is admin
+        if (userService.checkIsAdmin(chatId)) {
+            String productId = getIdFromCallback(callbackData);
+            productService.updateProductsByProductAvailable(Long.parseLong(productId), false);
+            sendMessageCallback(callbackId, "Success", true);
+        } else {
+            sendMessageCallback(callbackId, "Only admin can disable product", true);
+        }
 
-        String productId = getIdFromCallback(callbackData);
-        productService.updateProductsByProductAvailable(Long.parseLong(productId), false);
-        sendMessageCallback(callbackId, "Success", true);
     }
 
     private void enableProduct(Long chatId, String callbackData, String callbackId) {
-        //to do
-        //check if is admin
+        if (userService.checkIsAdmin(chatId)) {
+            String productId = getIdFromCallback(callbackData);
+            productService.updateProductsByProductAvailable(Long.parseLong(productId), true);
+            sendMessageCallback(callbackId, "Success", true);
+        } else {
+            sendMessageCallback(callbackId, "Only admin can enable product", true);
+        }
 
-        String productId = getIdFromCallback(callbackData);
-        productService.updateProductsByProductAvailable(Long.parseLong(productId), true);
-        sendMessageCallback(callbackId, "Success", true);
 
     }
 
     private void editProducts(Long chatId, String callbackData, String callbackId) {
-        //to do
-        //check if is admin
-        String language = userService.getUserLanguage(chatId);
-        Language languageProperties = getLanguageProperties(language);
-        String productId = getIdFromCallback(callbackData);
-        InlineKeyboardMarkup markupInline = productService.buildKeyboardProductEditAdmin(languageProperties, productId);
-        sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getAdminCommandEdit();
-        sendMessageKeyboard(chatId, answer, markupInline);
+        if (userService.checkIsAdmin(chatId)) {
+            String language = userService.getUserLanguage(chatId);
+            Language languageProperties = getLanguageProperties(language);
+            String productId = getIdFromCallback(callbackData);
+            InlineKeyboardMarkup markupInline = productService.buildKeyboardProductEditAdmin(languageProperties, productId);
+            sendMessageCallback(callbackId, "Loading…", false);
+            String answer = languageProperties.getAdminCommandEdit();
+            sendMessageKeyboard(chatId, answer, markupInline);
+        } else {
+            sendMessageCallback(callbackId, "Only admin can edit product", true);
+        }
+
     }
 
 
     private void adminCommandReceived(long chatId) {
-        //to do
-        //check if is admin
-        String language = userService.getUserLanguage(chatId);
-        Language languageProperties = getLanguageProperties(language);
-        var productList = productService.findAll();
-        InlineKeyboardMarkup markupInline = productService.buildKeyboardProductListAdmin(productList, language);
-        String answer = languageProperties.getAdminCommand();
-        sendMessageKeyboard(chatId, answer, markupInline);
+        if (userService.checkIsAdmin(chatId)) {
+            String language = userService.getUserLanguage(chatId);
+            Language languageProperties = getLanguageProperties(language);
+            var productList = productService.findAll();
+            InlineKeyboardMarkup markupInline = productService.buildKeyboardProductListAdmin(productList, language);
+            String answer = languageProperties.getAdminCommand();
+            sendMessageKeyboard(chatId, answer, markupInline);
+        } else {
+            sendMessage(chatId, "Only admin can send admin command");
+        }
     }
 
-    private boolean checkUserIsAdmin(Long chatId) {
-        var user = userService.findById(chatId);
-        return user.getPrivilege() > 0;
-    }
 
     private String getIdFromCallback(String callbackData) {
         return callbackData.substring(callbackData.lastIndexOf("_") + 1);
@@ -502,14 +532,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
 
-//    private void runTest(long chatId, Integer messageId) {
-//
-//
-//        EditMessageText editMessageText = new EditMessageText();
-//        editMessageText.setChatId(chatId);
-//        editMessageText.setMessageId(messageId);
-//    }
-
     private void confirmQuantityOrders(Long chatId, String callbackId, String callbackData) {
         String orderId = getIdFromCallback(callbackData);
         String quantity = getQuantityFromCallback(callbackData);
@@ -598,7 +620,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         Language languageProperties = getLanguageProperties(language);
         InlineKeyboardMarkup markupInline = productService.buildKeyboardProductButton(productId, languageProperties);
         String text = UtilityService.buildDescriptionLanguage(user.getLanguage(), product);
-        text = text.replaceAll("/n",System.lineSeparator());
+        text = text.replaceAll("/n", System.lineSeparator());
         sendPhoto(chatId, callbackData);
         sendMessageCallback(callbackId, "Loading…", false);
         sendMessageKeyboard(chatId, text, markupInline);
@@ -654,7 +676,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     }
 
-    private void sendMessage(long chatId, String text) {
+    public void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
         try {
             execute(message);
@@ -698,4 +720,5 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Exception :", e);
         }
     }
+
 }

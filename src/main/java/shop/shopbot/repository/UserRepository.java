@@ -12,6 +12,9 @@ import shop.shopbot.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query(value = "SELECT privilege from users u where u.chat_id=:chatId", nativeQuery = true)
+    Integer getUserPrivilege(Long chatId);
+
     @Query(value = "SELECT language from users u where u.chat_id=:chatId", nativeQuery = true)
     String getUserLanguage(Long chatId);
 

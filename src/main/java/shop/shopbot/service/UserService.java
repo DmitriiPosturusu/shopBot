@@ -44,6 +44,7 @@ public class UserService {
         return users;
     }
 
+
     public void updateUserPhoneNumber(long chatId, String phoneNumber) {
         log.info("updateUserPhoneNumber [ UserId : [" + chatId + "] , PhoneNumber : [" + phoneNumber + "]]");
         userRepository.updateUserPhoneNumber(chatId, phoneNumber);
@@ -59,6 +60,7 @@ public class UserService {
         log.info("updateUserLanguage [ UserId : [" + chatId + "] , Language : [" + language + "]");
         userRepository.updateUserLanguage(chatId, language);
     }
+
     public void saveUser(Message message) {
         var chatID = message.getChatId();
         var chat = message.getChat();
@@ -105,4 +107,8 @@ public class UserService {
     }
 
 
+    public boolean checkIsAdmin(long chatId) {
+        int privilege = userRepository.getUserPrivilege(chatId);
+        return privilege == 1;
+    }
 }
