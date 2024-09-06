@@ -1,0 +1,19 @@
+Bot commands:
+
+Visible to all users
+
+/start -> Displays the message from the main page and checks if the user exists in the database, if not, creates it.
+/menu -> Displays the message from the menu and creates Category buttons. Users can navigate the menu to browse products, select quantities, and add items to their shopping cart for later purchase.
+/shop -> Displays the message from the shopping cart, if there are purchases in the cart, it displays them.
+/setting -> Displays the settings message where the language and phone number can be set.
+/help -> Displays the support message where the user can contact support.
+/sendme "Message" -> Send "Message" to yourself to see the Message.
+
+Visible only to the admin
+
+/admin -> Shows all products (even those hidden by users) and buttons to show/hide products from regular users.
+/send "Message" -> Sends the message to all users.
+/importPictures -> Import pictures from Cloud AWS S3. First check your AWS settings.
+@ attach the .csv file -> Upload the .csv file to telegram bot
+/importProduct -> Import the products from the .csv file into the database. First upload the .csv file to Telegram bot.
+@ attach image -> Upload image with Caption (comment on image) as file name in telegram bot. If the file name coincides with the product ID, then it will be displayed in the bot when choosing the product.

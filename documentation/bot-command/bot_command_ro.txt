@@ -1,0 +1,24 @@
+Bot commands:
+
+Vizibile tuturor utilizatorilor
+
+/start -> Afiseaza mesajul din pagina principala si verifica daca user exista in baza de data, daca nu exista il creaza.
+/menu -> Afiseaza mesajul din meniu si creaza butoane din Categorie. Utilizatorii pot naviga prin meniu pentru a căuta produse, selecta cantități și pot adăuga articole în coșul de cumpărături pentru achiziții ulterioare.
+/shop -> Afiseaza mesajul din cosul de cumparaturi daca exista cumparaturi in cos le afiseaza.
+/setting -> Afiseaza mesajul din setari unde poate fi setat limba si numarul de telefon.
+/help -> Afiseaza mesajul din support unde utilizator poate luat legatura cu support.
+/sendme "Mesaj" -> Trimete "Mesaj" singur tie pentru a vedea Mesajul.
+
+Vizibile doar administratorului
+
+/admin -> Afiseaza toate produsele(chiar si cele ascunse de utilizatori) si butoane pentru afisare/ascunde produselor de utilizatori obisnuiti.
+/send "Mesaj" -> Trimete mesajul tuturor utilizatorilor.
+/importPictures -> Importeaza pozele din Cloud Aws S3. Inainte verificati setarile de AWS.
+@ ataseaza fisierul .csv -> Incarca fisierul .csv in telegram bot
+/importProduct -> Importeaza produsele din fisierul .csv in baza de date. Inainte incarcati fisierul .csv in telegram bot.
+@ ataseaza imagine -> Incarca imagine cu Caption(comentariu la imagine) ca nume fisier in telegram bot. Daca nume fisier coincide cu produs ID atunci ea se va afisa in bot la alegerea produsului.
+
+
+
+
+
