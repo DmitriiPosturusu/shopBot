@@ -1,0 +1,10 @@
+Add {ProductName} quantity {ProductQuantity} to my shopping cart.
+Put {ProductName} with quantity {ProductQuantity} in the cart.
+Add {ProductQuantity} of {ProductName} to my shopping bag.
+Add {ProductName} with {ProductQuantity} quantity to the shopping cart.
+Place {ProductQuantity} {ProductName} in my shopping cart.
+Add {ProductQuantity} of {ProductName} to my cart.
+I want {ProductQuantity} {ProductName} in my shopping cart.
+Add {ProductName} with quantity {ProductQuantity} to my cart.
+Put {ProductQuantity} of {ProductName} into the shopping bag.
+Add {ProductQuantity} {ProductName} to the shopping bag.
