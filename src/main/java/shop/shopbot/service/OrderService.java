@@ -46,9 +46,9 @@ public class OrderService {
         ordersRepository.updateQuantityByOrderId(orderId, quantity, finalPrice);
     }
 
-    public void updateStatusByOrderId(long userId, String status) {
-        log.info("updateStatusByOrderId [ UserId : [" + userId + "] , Status : [" + status + "]]");
-        ordersRepository.updateStatusByOrderId(userId, status);
+    public void updateOrderStatusByOrderId(long userId, String status) {
+        log.info("updateStatusByUserId [ UserId : [" + userId + "] , Status : [" + status + "]]");
+        ordersRepository.updateOrderStatusByOrderId(userId, status);
     }
 
     public Order findById(Long orderId) {
@@ -147,7 +147,7 @@ public class OrderService {
         for (Order order : orderList) {
             rowInLine = new ArrayList<>();
             String text = UtilityService.getLanguageProduct(order.getProduct(), languageProperties.getLanguage());
-            keyboardButton = UtilityService.buildKeyboardButton(text + " qty: " + order.getQuantity(), "editProd_" + order.getOrderId());
+            keyboardButton = UtilityService.buildKeyboardButton(text , "editProd_" + order.getOrderId());
             rowInLine.add(keyboardButton);
             rowsInLine.add(rowInLine);
         }

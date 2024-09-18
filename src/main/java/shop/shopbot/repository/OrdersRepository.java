@@ -19,7 +19,6 @@ public interface OrdersRepository extends JpaRepository<Order, Long> {
 
     boolean existsByProductAndUserAndStatus(Product productId, User chatId, String status);
 
-    List<Order> findAllByUser(User user);
 
     List<Order> findAllByUserAndStatusEquals(User user, String status);
 
@@ -33,8 +32,8 @@ public interface OrdersRepository extends JpaRepository<Order, Long> {
 
     @Transactional
     @Modifying(clearAutomatically = true)
-    @Query(value = "update orders set status=:status, finished_at=now() where user_id=:userId", nativeQuery = true)
-    void updateStatusByOrderId(@Param(value = "userId") long userId, @Param(value = "status") String status);
+    @Query(value = "update orders set status=:status, finished_at=now() where order_id=:orderId", nativeQuery = true)
+    void updateOrderStatusByOrderId(@Param(value = "orderId") long orderId, @Param(value = "status") String status);
 
 
 }
