@@ -6,10 +6,12 @@ The bot can be deployed on-premises using Docker Compose or to the cloud using A
 ---
 
 ## Key Features
-- **E-commerce platform**: Users can browse products, filter by categories, add items to their shopping bag, and place orders through Telegram.You can read more information about bot functionality here : [Bot Functionality Overview](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-functionality/ReadMeEn.md)  Here is demo video:
+- **E-commerce platform**: Users can browse products, filter by categories, add items to their shopping bag, and place orders through Telegram.You can read more information about bot functionality here : [Bot Functionality Overview](https://github.com/DmitriiPosturusu/shopBot/blob/master/documentation/bot-functionality/ReadMeEn.md) .
+- Here is demo video:
   [![Text](https://img.youtube.com/vi/7JNcmRekXM0/0.jpg)](https://www.youtube.com/watch?v=7JNcmRekXM0)
 
-- **Multi-modal & Multi-language communication**: The system supports both manual interactions (via buttons) and NLP-based interactions (via text).User can interact in multiple languages. Here is demo video:
+- **Multi-modal & Multi-language communication**: The system supports both manual interactions (via buttons) and NLP-based interactions (via text).User can interact in multiple languages. 
+- Here is demo video:
   [![Text](https://img.youtube.com/vi/X97kkEO_X2U/0.jpg)](https://www.youtube.com/watch?v=X97kkEO_X2U)
 
 - **AWS Comprehend**: (Planned for future) Enhancing bot’s NLP understanding by extracting entities and improving conversational flow.
