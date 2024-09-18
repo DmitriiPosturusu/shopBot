@@ -1,0 +1,42 @@
+Show me the {ProductName} .
+Show me the product with name {ProductName} .
+Display me the product with name {ProductName} .
+I want to see {ProductName} .
+Can I see {ProductName} on the menu?
+Do you have {ProductName} ?
+What is {ProductName} ?
+Display {ProductName} .
+Tell me more about {ProductName} .
+Do you offer {ProductName} ?
+Give me details about {ProductName} .
+What can you tell me about {ProductName} ?
+Is {ProductName} available?
+What’s on the menu for {ProductName} ?
+I’m looking for {ProductName} .
+Find {ProductName} for me.
+Can I order {ProductName} ?
+Do you sell {ProductName} ?
+Show details for {ProductName} .
+What options do you have for {ProductName} ?
+Is there {ProductName} ?
+What’s the price of {ProductName} ?
+Can I get more info on {ProductName} ?
+Tell me if you have {ProductName} .
+What ingredients are in {ProductName} ?
+Is {ProductName} on the menu today ?
+List {ProductName} on the menu .
+What kind of {ProductName} do you have ?
+Can you find {ProductName} ?
+What is the availability of {ProductName} ?
+Tell me the details of {ProductName} .
+Is {ProductName} still available ?
+What do you have for {ProductName} ?
+What is in the {ProductName} ?
+Tell me if {ProductName} is available.
+List all products related to {ProductName} .
+What can I order for {ProductName} ?
+Do you have any {ProductName} dishes?
+Show the {ProductName} product.
+Can you give me {ProductName} details?
+Let me know about {ProductName} .
+I’m interested in {ProductName} .

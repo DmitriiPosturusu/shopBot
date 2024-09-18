@@ -1,0 +1,40 @@
+Show me products available on {DayOfWeek}
+What products can I order on {DayOfWeek} 
+List products for {DayOfWeek} 
+Do you have products available on {DayOfWeek} 
+What’s available for {DayOfWeek} 
+What products are on the menu for {DayOfWeek} 
+What can I get on {DayOfWeek} 
+Show me the menu for {DayOfWeek} 
+Which products are listed for {DayOfWeek} 
+What food is available on {DayOfWeek} 
+Can I see products for {DayOfWeek} 
+What dishes are available on {DayOfWeek} 
+Do you serve any products on {DayOfWeek} 
+Give me the menu for {DayOfWeek} 
+I’m looking for products on {DayOfWeek} 
+List the available dishes for {DayOfWeek} 
+Which products are available on {DayOfWeek} 
+Tell me what’s on the menu for {DayOfWeek} 
+Do you have any specials for {DayOfWeek} 
+What’s on offer for {DayOfWeek} 
+Show me the food available on {DayOfWeek} 
+What can I get on the menu for {DayOfWeek} 
+Are there any products for {DayOfWeek} 
+Show me the list of products for {DayOfWeek} 
+What’s the menu for {DayOfWeek} 
+What food can I order on {DayOfWeek} 
+What products are available on {DayOfWeek} 
+What’s on the list for {DayOfWeek} 
+Show me dishes available for {DayOfWeek} 
+What’s available to order on {DayOfWeek} 
+Can I see the menu for {DayOfWeek} 
+Are there any special dishes for {DayOfWeek} 
+Tell me what’s available on {DayOfWeek} 
+Which products are on the menu for {DayOfWeek} 
+What products are listed for {DayOfWeek} 
+Do you have any products on {DayOfWeek} 
+Which products can I order for {DayOfWeek} 
+Give me the list of products available on {DayOfWeek} 
+Tell me the products for {DayOfWeek} 
+What’s the availability for {DayOfWeek} 

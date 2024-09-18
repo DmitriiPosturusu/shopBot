@@ -1,0 +1,41 @@
+Show me {Category} products.
+Show me {Category} 
+List all {Category} 
+List all {Category} products.
+What {Category} options do you have?
+Display all {Category} products.
+What are the available {Category} products?
+Show me the {Category} options.
+Give me a list of {Category} products.
+What {Category} dishes do you offer?
+Can you list all {Category} products?
+I’d like to see the {Category} products.
+What’s in the {Category} Category?
+Show me everything in the {Category} section.
+What {Category} products are available?
+Display all {Category} dishes.
+What do you have in the {Category} Category?
+List all products under {Category} .
+Give me the {Category} products list.
+I’m looking for {Category} dishes.
+Show me the menu for {Category} .
+What {Category} dishes can I choose from?
+List every {Category} product you have.
+Can you show me {Category} products?
+I want to see all {Category} products.
+Show the {Category} products on your menu.
+Give me the {Category} options.
+Show all products in the {Category} Category.
+What’s available in {Category} ?
+List all the {Category} products.
+Do you have {Category} products?
+Give me the list of {Category} options.
+Display the {Category} product list.
+Show me all the {Category} products.
+What are your {Category} offerings?
+Can I see all {Category} products?
+I’d like to check the {Category} products.
+What kind of {Category} dishes do you have?
+Do you offer {Category} products?
+What’s on the {Category} menu?
+List all available {Category} products.
