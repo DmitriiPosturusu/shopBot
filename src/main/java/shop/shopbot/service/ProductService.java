@@ -29,6 +29,10 @@ public class ProductService {
         return productsRepository.findAllByCategories(categoryId);
     }
 
+    public List<Product> findAllByLabel(String label) {
+        return productsRepository.findAllByProductLabelIsContainingIgnoreCase(label);
+    }
+
     public Long getCategoryByProductId(long productId) {
         return productsRepository.getCategoryByProductId(productId);
     }
@@ -55,27 +59,21 @@ public class ProductService {
         return products;
     }
 
-    public InlineKeyboardMarkup buildKeyboardProducts(List<Product> productList, Language languageProperties) {
+    public InlineKeyboardMarkup buildKeyboardProducts(List<Product> productList, Language languageProperties, String callbackData) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine;
         InlineKeyboardButton keyboardButton;
-        boolean weekOffer = false;
-        if (!productList.isEmpty()) {
-            weekOffer = productList.get(0).getCategories().getDayOfWeek();
-        }
+
         for (Product product : productList) {
-            List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+            rowInLine = new ArrayList<>();
             String name = UtilityService.getLanguageProduct(product, languageProperties.getLanguage());
             keyboardButton = UtilityService.buildKeyboardButton(name, "product_" + product.getProductId());
             rowInLine.add(keyboardButton);
             rowsInLine.add(rowInLine);
         }
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        if (weekOffer) {
-            keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backWeekOffer");
-        } else {
-            keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backCategory");
-        }
+        rowInLine = new ArrayList<>();
+        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "day_of_week_"+callbackData);
         rowInLine.add(keyboardButton);
         rowsInLine.add(rowInLine);
         markupInline.setKeyboard(rowsInLine);
@@ -83,28 +81,28 @@ public class ProductService {
         return markupInline;
     }
 
-    public InlineKeyboardMarkup buildKeyboardProductButton(String productId, Language languageProperties) {
+    public InlineKeyboardMarkup buildKeyboardProductButton(Product product, Language languageProperties) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
         InlineKeyboardButton keyboardButton;
-        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBuy(), "buy_" + productId);
+        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBuy(), "buy_" + product.getProductId());
         rowInLine.add(keyboardButton);
-        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backProd_" + productId);
+        rowsInLine.add(rowInLine);
+        rowInLine = new ArrayList<>();
+        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "category_" + product.getCategories().getCategoryId()+"_day_of_week_"+product.getDayOfWeekId().getDayOfWeekId());
         rowInLine.add(keyboardButton);
         rowsInLine.add(rowInLine);
         markupInline.setKeyboard(rowsInLine);
-        log.info("buildKeyboardProductButton [ ProductId : [" + productId + "] ; RowsInLine : [" + rowsInLine + "]]");
+        log.info("buildKeyboardProductButton [ ProductId : [" + product.getProductId() + "] ; RowsInLine : [" + rowsInLine + "]]");
 
         return markupInline;
     }
 
-    public InlineKeyboardMarkup buildKeyboardProductByCategory(List<Product> productList, Language languageProperties) {
+    public InlineKeyboardMarkup buildKeyboardProductList(List<Product> productList, Language languageProperties) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-
         InlineKeyboardButton keyboardButton;
-
         for (Product product : productList) {
             List<InlineKeyboardButton> rowInLine = new ArrayList<>();
             String name = UtilityService.getLanguageProduct(product, languageProperties.getLanguage());
@@ -112,15 +110,12 @@ public class ProductService {
             rowInLine.add(keyboardButton);
             rowsInLine.add(rowInLine);
         }
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backCategory");
-        rowInLine.add(keyboardButton);
-        rowsInLine.add(rowInLine);
         markupInline.setKeyboard(rowsInLine);
-        log.info("buildKeyboardProductByCategory [ Products : [" + productList + "] ; RowsInLine : [" + rowsInLine + "]]");
+        log.info("buildKeyboardProductList [ Products : [" + productList + "] ; RowsInLine : [" + rowsInLine + "]]");
 
         return markupInline;
     }
+
 
     public InlineKeyboardMarkup buildKeyboardProductQuantity(String productId, Language languageProperties) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
@@ -139,7 +134,7 @@ public class ProductService {
         }
         rowsInLine.add(rowInLine);
         rowInLine = new ArrayList<>();
-        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backProd_" + productId);
+        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "product_" + productId);
         rowInLine.add(keyboardButton);
         rowsInLine.add(rowInLine);
         markupInline.setKeyboard(rowsInLine);
@@ -175,5 +170,17 @@ public class ProductService {
         markupInline.setKeyboard(rowsInLine);
         log.info("buildKeyboardProductEditAdmin [ ProductId : [" + productId + "] ; RowsInLine : [" + rowsInLine + "]]");
         return markupInline;
+    }
+
+    public List<Product> findAllByDay(String dayOfWeek) {
+        return productsRepository.findAllByDayOfWeek(dayOfWeek);
+    }
+
+    public List<Product> findAllByName(String productName) {
+        return productsRepository.findAllByName(productName);
+    }
+
+    public List<Product> findAllByDayAndCategory(Long dayOfWeekId, Long categoryId) {
+        return productsRepository.findAllByDayOfWeekIdAndCategoryId(dayOfWeekId, categoryId);
     }
 }

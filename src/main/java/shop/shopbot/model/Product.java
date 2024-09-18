@@ -20,6 +20,7 @@ public class Product {
     @Id
     @Column(name = "product_id")
     private Long productId;
+
     @Column(name = "product_name_en")
     private String productNameEn;
 
@@ -29,6 +30,8 @@ public class Product {
     @Column(name = "product_price")
     private BigDecimal productPrice;
 
+    @Column(name = "product_label")
+    private String productLabel;
 
     @Column(name = "product_descr_en", columnDefinition = "TEXT")
     private String productDescriptionEn;
@@ -40,8 +43,13 @@ public class Product {
     private boolean productAvailable;
 
     @ManyToOne
+    @JoinColumn(name = "day_of_week_id", nullable = false)
+    private DayOfWeek dayOfWeekId;
+
+    @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category categories;
+
 
     public Product(Long productId) {
         this.productId = productId;
