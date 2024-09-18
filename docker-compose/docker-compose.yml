@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres:/data/postgres
     ports:
-      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     networks:
       - postgres
     restart: unless-stopped
@@ -53,7 +53,7 @@ services:
     environment:
       DATA_SOURCE_NAME: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB_NAME}?sslmode=disable"
     ports:
-      - '${POSTGRES_EXPORTER_PORT}:${POSTGRES_EXPORTER_PORT}'
+      - "${POSTGRES_EXPORTER_PORT}:${POSTGRES_EXPORTER_PORT}"
     restart: unless-stopped
     volumes:
       - postgres_exporter:/etc/postgres_exporter/postgres_exporter
@@ -76,7 +76,7 @@ services:
     networks:
       - postgres
     ports:
-      - '9090:9090'
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
     volumes:
       - ./docker/prometheus/:/etc/prometheus/
       - prometheus:/prometheus
@@ -89,7 +89,7 @@ services:
     image: grafana/grafana
     container_name: app_grafana
     ports:
-      - '3000:3000'
+      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
     networks:
       - postgres
     environment:
@@ -127,7 +127,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - '8080:8080'
+      - "${APP_PORT}:${APP_PORT}"
     environment:
       SPRING_APPLICATION_JSON: '{
             "spring.datasource.url"  : "jdbc:postgresql://postgres:5432/${POSTGRES_DB_NAME}",
@@ -144,7 +144,11 @@ services:
             "app.aws.secret-access-key" : "${AWS_SECRET_ACCESS_KEY}",
             "app.aws.s3-region" : "${AWS_S3_REGION}",
             "app.aws.s3-bucket-name" : "${AWS_S3_BUCKET_NAME}",
-            "bot.key":"${BOT_KEY}"
+            "bot.key":"${BOT_KEY}",
+            "app.aws.bot-id":"${AWS_BOT_ID}",
+            "app.aws.bot-alias-id":"${AWS_BOT_ALIAS_ID}",
+            "app.aws.locale-id":"${AWS_BOT_LOCALE_ID}"
+            
           }'
 networks:
   postgres:
