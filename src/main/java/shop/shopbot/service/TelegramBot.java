@@ -1,5 +1,6 @@
 package shop.shopbot.service;
 
+
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
@@ -13,8 +14,10 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -22,13 +25,17 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import shop.shopbot.config.*;
 import shop.shopbot.model.Order;
+import shop.shopbot.model.ProductState;
 import shop.shopbot.model.User;
 import shop.shopbot.utility.UtilityService;
+import software.amazon.awssdk.services.lexruntimev2.model.RecognizeTextResponse;
+import software.amazon.awssdk.services.lexruntimev2.model.Slot;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +43,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -62,11 +70,12 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private final TelegramService telegramService;
 
+    private final LexService lexService;
 
-    private final CustomJobExecutionListener jobExecutionListener;
+    private final DayOfWeekService dayOfWeekService;
 
 
-    public TelegramBot(BotConfig config, LanguageEn languageEn, LanguageRo languageRo, JobLauncher jobLauncher, Job csvImporterJob, UserService userService, OrderService orderService, ProductService productService, CategoryService categoryService, TelegramService telegramService, AmazonS3 s3Client, CustomJobExecutionListener jobExecutionListener) {
+    public TelegramBot(BotConfig config, LanguageEn languageEn, LanguageRo languageRo, JobLauncher jobLauncher, Job csvImporterJob, UserService userService, OrderService orderService, ProductService productService, CategoryService categoryService, TelegramService telegramService, AmazonS3 s3Client, LexService lexService, DayOfWeekService dayOfWeekService) {
         this.config = config;
         this.languageEn = languageEn;
         this.languageRo = languageRo;
@@ -78,10 +87,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.categoryService = categoryService;
         this.telegramService = telegramService;
         this.s3Client = s3Client;
-        this.jobExecutionListener = jobExecutionListener;
+        this.lexService = lexService;
+        this.dayOfWeekService = dayOfWeekService;
+
         List<BotCommand> botCommandList = new ArrayList<>();
-        botCommandList.add(new BotCommand("/start", "Get a welcome message"));
         botCommandList.add(new BotCommand("/menu", "Get a menu"));
+        botCommandList.add(new BotCommand("/start", "Get a welcome message"));
         botCommandList.add(new BotCommand("/shop", "Get your shopping bag"));
         botCommandList.add(new BotCommand("/setting", "Get settings"));
         botCommandList.add(new BotCommand("/help", "Get helped"));
@@ -108,6 +119,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
+
         if (update.hasMessage() && update.getMessage().hasText()) {
             String message = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
@@ -128,21 +140,23 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else if (message.startsWith("+44")) {
                 updateUserPhoneNumber(chatId, message);
                 settingCommandReceived(chatId);
+            } else if (message.startsWith("@")) {
+                aiCommandReceived(chatId, message);
             }
 
 
             switch (message) {
                 case "/start":
                     registerUser(update.getMessage());
-                    startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    startCommandReceived(chatId);
                     break;
                 case "Pagina principala", "Main":
-                    startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    startCommandReceived(chatId);
                     break;
                 case "/menu", "Meniu", "Menu":
                     menuCommandReceived(chatId);
                     break;
-                case "/shop", "Cos de cumparaturi", "Shopping bag":
+                case "/shop", "Cos de cumparaturi", "Shopping Cart":
                     shoppingCommandReceived(chatId);
                     break;
                 case "/setting", "Setting":
@@ -172,15 +186,15 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             log.info("Received update from UserId :[" + chatId + "] , CallBackData : [" + callbackData + "] , CallBackId :[" + callbackId + "]]");
 
-            if (callbackData.startsWith("category")) {
-                buildProductsList(chatId, callbackId, callbackData);
-            } else if (callbackData.startsWith("product")) {
-                buyProduct(chatId, callbackId, callbackData);
-            } else if (callbackData.startsWith("backCategory")) {
+            if (callbackData.startsWith("day_of_week")) {
+                buildCategoryByDayOfWeek(chatId, callbackId, callbackData);
+            } else if (callbackData.startsWith("category")) {
+                buildProductByCategoryAndDayOfWeek(chatId, callbackId, callbackData);
+            } else if (callbackData.startsWith("backDayOfWeek")) {
                 sendMessageCallback(callbackId, "Loading…", false);
                 menuCommandReceived(chatId);
-            } else if (callbackData.startsWith("backProd")) {
-                buildCategoryByProduct(chatId, callbackId, callbackData);
+            } else if (callbackData.startsWith("product")) {
+                buyProduct(chatId, callbackId, callbackData);
             } else if (callbackData.startsWith("buy")) {
                 buildQuantity(chatId, callbackData, callbackId);
             } else if (callbackData.startsWith("quantity")) {
@@ -210,7 +224,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 shoppingCommandReceived(chatId);
             } else if (callbackData.startsWith("confirmOrder")) {
                 confirmQuantityOrder(chatId, callbackId);
-                startCommandReceived(chatId, update.getCallbackQuery().getMessage().getChat().getFirstName());
+                //startCommandReceived(chatId, update.getCallbackQuery().getMessage().getChat().getFirstName());
             } else if (callbackData.startsWith("setLanguageEn")) {
                 updateUserLanguage(chatId, "en", callbackId);
                 settingCommandReceived(chatId);
@@ -227,10 +241,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 adminCommandReceived(chatId);
             } else if (callbackData.startsWith("setPhoneNumber")) {
                 setPhoneNumberCallback(chatId, callbackId);
-            } else if (callbackData.startsWith("getWeekOffer") || callbackData.startsWith("backWeekOffer")) {
-                buildWeekOffer(chatId, callbackId);
             }
-
 
         }
 
@@ -285,6 +296,96 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         }
 
+        if (update.hasPreCheckoutQuery()) {
+            //TODO
+            var response = update.getPreCheckoutQuery().getOrderInfo();
+            var amount = update.getPreCheckoutQuery().getTotalAmount();
+
+
+            AnswerPreCheckoutQuery answerPreCheckoutQuery = new AnswerPreCheckoutQuery(update.getPreCheckoutQuery().getId(), true);
+
+            try {
+                execute(answerPreCheckoutQuery);
+            } catch (TelegramApiException e) {
+                log.error("Exception :", e);
+            }
+
+        }
+        if (update.hasMessage() && update.getMessage().hasSuccessfulPayment()) {
+            String[] list = update.getMessage().getSuccessfulPayment().getInvoicePayload().split("_");
+            for (String orderId : list) {
+                orderService.updateOrderStatusByOrderId(Long.parseLong(orderId), "FINISHED");
+            }
+            log.info("Payment success with payload [" + update.getMessage().getSuccessfulPayment().getInvoicePayload() + "] and info [" + update.getMessage().getSuccessfulPayment().getOrderInfo() + "]");
+            System.out.println("Payment success");
+
+
+        }
+
+
+    }
+
+
+    private void aiCommandReceived(long chatId, String message) {
+        RecognizeTextResponse recognizeTextResponse = lexService.detectKeyPhrases(config.getBotId(), config.getBotAliasId(), config.getBotLocaleId(), chatId, message);
+        log.info("ChatId :[" + chatId + "] , Message :[" + message + "] ,RecognizeTextResponse :[" + recognizeTextResponse + "]");
+        if (recognizeTextResponse.sessionState().intent() != null) {
+            String intentName = recognizeTextResponse.sessionState().intent().name();
+            Map<String, Slot> slots = recognizeTextResponse.sessionState().intent().slots();
+            String language = userService.getUserLanguage(chatId);
+            Language languageProperties = getLanguageProperties(language);
+
+            if (intentName.equals("FallbackIntent")) {
+                var suggestedIntent = recognizeTextResponse.interpretations();
+                var suggestedIntentName = suggestedIntent.stream().filter(s -> !s.intent().name().equals("FallbackIntent")).findFirst();
+                if (suggestedIntentName.isPresent()) {
+                    var intent = suggestedIntentName.get().intent();
+                    InlineKeyboardMarkup keyboardMarkup = lexService.getInlineKeyboardByIntentName(intent.name(), intent.slots(), languageProperties);
+                    if (keyboardMarkup == null) {
+                        sendMessage(chatId, " Sorry I don't get it. ");
+                    } else {
+                        sendMessageKeyboard(chatId, "Sorry I don't get it ,but here I found something similar", keyboardMarkup);
+                    }
+
+                } else {
+                    sendMessage(chatId, " Sorry I don't get it. ");
+                }
+
+            } else if (intentName.equals("showAllCreatedOrder")) {
+                shoppingCommandReceived(chatId);
+            } else if (intentName.equals("addToShoppingCart")) {
+                ProductState productState = lexService.checkProductNameReceived(slots);
+                if (productState.equals(ProductState.NOT_FOUND)) {
+                    sendMessage(chatId, "Product not fount or quantity is blank");
+                } else if (productState.equals(ProductState.FOUND)) {
+                    if (lexService.createOrder(slots, chatId)) {
+                        shoppingCommandReceived(chatId);
+                    } else {
+                        sendMessage(chatId, "Failed to create new order. Product already exist in your Shopping Cart");
+                        shoppingCommandReceived(chatId);
+                    }
+
+                } else {
+                    InlineKeyboardMarkup markupInlineFinal = lexService.getInlineKeyboardByIntentName(intentName, slots, languageProperties);
+                    sendMessageKeyboard(chatId, "Found more products : ", markupInlineFinal);
+                }
+
+            } else {
+
+                InlineKeyboardMarkup markupInlineFinal = lexService.getInlineKeyboardByIntentName(intentName, slots, languageProperties);
+                if (markupInlineFinal.getKeyboard().isEmpty()) {
+                    sendMessage(chatId, "Sorry I don't found records based on your search");
+
+                } else {
+                    sendMessageKeyboard(chatId, "Your search returned the following: : ", markupInlineFinal);
+                }
+
+
+            }
+
+
+        }
+
     }
 
     private void importPicturesFromAws(long chatId) {
@@ -314,20 +415,6 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     }
 
-    private void buildWeekOffer(Long chatId, String callbackId) {
-        String language = userService.getUserLanguage(chatId);
-        Language languageProperties = getLanguageProperties(language);
-        InlineKeyboardMarkup markupInline = buildWeekOfferKeyboard(languageProperties, true);
-        String answer = languageProperties.getWeekDays();
-        sendMessageKeyboard(chatId, answer, markupInline);
-        sendMessageCallback(callbackId, "Loading…", false);
-    }
-
-    private InlineKeyboardMarkup buildWeekOfferKeyboard(Language languageProperties, boolean daysOfWeek) {
-        var categories = categoryService.findAllByDayOfWeek(daysOfWeek);
-        return categoryService.buildKeyboardMenu(categories, languageProperties, daysOfWeek);
-
-    }
 
     private void updateUserPhoneNumber(long chatId, String message) {
         userService.updateUserPhoneNumber(chatId, message);
@@ -416,6 +503,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         return callbackData.substring(callbackData.lastIndexOf("_") + 1);
     }
 
+    private String getCategoryId(String callbackData) {
+        return callbackData.substring(0, callbackData.lastIndexOf("_day"));
+    }
+
+
     private void updateUserLanguage(Long chatId, String language, String callbackId) {
         userService.updateUserLanguage(chatId, language);
         sendMessageCallback(callbackId, "Success", false);
@@ -424,7 +516,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void helpCommandReceived(Long chatId) {
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
-        String answer = languageProperties.getTextSupport();
+        String answer = languageProperties.getTextSupport().replaceAll("/n", System.lineSeparator());
         sendMessage(chatId, answer);
     }
 
@@ -433,19 +525,42 @@ public class TelegramBot extends TelegramLongPollingBot {
         InlineKeyboardMarkup markupInline = userService.buildKeyboardSetting();
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
+        String answerTextLanguage = "English";
+        if (language.equals("ro")) {
+            answerTextLanguage = "Romana";
+        }
+        StringBuilder answer = new StringBuilder();
+        answer.append(languageProperties.getSettingCommand()).append("  <i>").append(answerTextLanguage).append("</i>").append(System.lineSeparator()).append(System.lineSeparator()).append(languageProperties.getSettingPhoneNumber()).append(" <i>").append(user.getPhoneNumber()).append("</i>").append(System.lineSeparator()).append(System.lineSeparator()).append(languageProperties.getSettingText());
 
-        String answer = languageProperties.getSettingCommand() + " " + user.getLanguage().toUpperCase() + " " + languageProperties.getSettingPhoneNumber() + " " + user.getPhoneNumber();
-        sendMessageKeyboard(chatId, answer, markupInline);
+        sendMessageKeyboard(chatId, answer.toString(), markupInline);
 
     }
 
     private void confirmQuantityOrder(Long chatId, String callback_id) {
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
-
+        var user = userService.findById(chatId);
         if (userService.findById(chatId).getPhoneNumber().startsWith("+44")) {
-            orderService.updateStatusByOrderId(chatId, "FINISHED");
+            //orderService.updateStatusByOrderId(chatId, "FINISHED");
+            var orders = orderService.findAllByUserAndStatusEquals(user, "CREATED");
             sendMessageCallback(callback_id, "Success", true);
+            List<LabeledPrice> productsLabel = new ArrayList<>();
+            for (Order order : orders) {
+                String[] product = order.getProduct().getProductNameEn().split(" ");
+                StringBuilder productName = new StringBuilder();
+                if (product.length > 0) {
+                    productName.append(product[0]).append(" ");
+                }
+                if (product.length > 1) {
+                    productName.append(product[1]).append(" ");
+                }
+                if (product.length > 2) {
+                    productName.append(product[2]).append(" ...");
+                }
+
+                productsLabel.add(new LabeledPrice(productName.toString(), order.getTotalPrice().intValue() * 100));
+            }
+            sendInvoice(chatId, productsLabel, orders);
         } else {
 
             String answer = languageProperties.getAlertPhoneNumber();
@@ -467,6 +582,20 @@ public class TelegramBot extends TelegramLongPollingBot {
         return callbackData.substring(callbackData.indexOf("_") + 1, callbackData.lastIndexOf("_"));
     }
 
+    private void buildCategoryByDayOfWeek(Long chatId, String callbackId, String callbackData) {
+        String language = userService.getUserLanguage(chatId);
+        Language languageProperties = getLanguageProperties(language);
+
+        String categoryId = getIdFromCallback(callbackData);
+        var categoryList = categoryService.findAllByDayOfWeek(categoryId);
+
+        InlineKeyboardMarkup markupInline = categoryService.buildKeyboardMenuCategory(categoryList, languageProperties, callbackData);
+        String answer = languageProperties.getMenuCommand().replaceAll("/n", System.lineSeparator());
+        sendMessageCallback(callbackId, "Loading…", false);
+        sendPhoto(chatId, "menu", answer, markupInline);
+
+    }
+
     private void confirmQuantityProduct(Long chatId, String callbackData, String callbackId) {
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
@@ -474,7 +603,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         String quantity = getQuantityFromCallback(callbackData);
         InlineKeyboardMarkup markupInline = orderService.buildKeyboardQuantityConfirm(languageProperties, orderId, quantity);
         sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getConfirmQuantity();
+        String answer = languageProperties.getConfirmQuantity() + " <b>" + quantity + "</b>";
         sendMessageKeyboard(chatId, answer, markupInline);
     }
 
@@ -496,7 +625,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         String orderId = getIdFromCallback(callbackData);
         InlineKeyboardMarkup markupInline = orderService.buildKeyboardProductInOrderConfirm(languageProperties, orderId);
         sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getConfirmProductRemove();
+        String answer = languageProperties.getConfirmProductRemove().replaceAll("/n", System.lineSeparator());
         sendMessageKeyboard(chatId, answer, markupInline);
     }
 
@@ -504,8 +633,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         String orderId = getIdFromCallback(callbackData);
         orderService.deleteById(Long.parseLong(orderId));
         sendMessageCallback(callback_id, "Loading…", false);
-        //editMsg
-
 
     }
 
@@ -526,7 +653,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         var orderList = orderService.findAllByUserAndStatusEquals(user, "CREATED");
         InlineKeyboardMarkup markupInline = orderService.buildKeyboardOrderEditableList(orderList, languageProperties);
         sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getEditOrders();
+        String answer = languageProperties.getEditOrders().replaceAll("/n", System.lineSeparator());
         sendMessageKeyboard(chatId, answer, markupInline);
 
     }
@@ -539,7 +666,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         Language languageProperties = getLanguageProperties(language);
         InlineKeyboardMarkup markupInline = orderService.buildKeyboardOrderConfirm(languageProperties, orderId, quantity);
         sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getConfirmQuantityOrders() + " : " + quantity;
+        String answer = languageProperties.getConfirmQuantityOrders() + "  <b>" + quantity + "</b>";
+        answer = answer.replaceAll("/n", System.lineSeparator());
         sendMessageKeyboard(chatId, answer, markupInline);
 
     }
@@ -547,23 +675,28 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void shoppingCommandReceived(Long chatId) {
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
+
+
         var user = userService.findById(chatId);
         var ordersList = orderService.findAllByUserAndStatusEquals(user, "CREATED");
-        StringBuilder text = new StringBuilder();
         if (ordersList.isEmpty()) {
-            String answer = languageProperties.getShoppingCommandEmpty();
+            String answer = languageProperties.getShoppingCommandEmpty().replaceAll("/n", System.lineSeparator());
             sendMessage(chatId, answer);
             return;
         }
+
+        StringBuilder text = new StringBuilder();
+
+        text.append("\uD83D\uDED2 <b>Order Details</b> \uD83D\uDED2 \nHere's a summary of your order: \n\n");
         BigDecimal finalPrice = new BigDecimal(0);
         for (Order order : ordersList) {
             var product = order.getProduct();
             finalPrice = finalPrice.add(order.getTotalPrice());
             //TODO
             //build text
-            text.append(UtilityService.getLanguageProduct(product, user.getLanguage())).append(" nr: ").append(order.getQuantity()).append(" price : ").append(order.getTotalPrice()).append("\n");
+            text.append("<strong>Product:</strong> ").append(UtilityService.getLanguageProduct(product, user.getLanguage())).append("\n \uD83D\uDD22 Quantity: <b>").append(order.getQuantity()).append("</b> \uD83D\uDD22 \n \uD83D\uDCB8 Price : <b>").append(order.getProduct().getProductPrice()).append(" MDL</b> \uD83D\uDCB8 \n\n");
         }
-        text.append(languageProperties.getFinalPrice()).append(finalPrice);
+        text.append("\uD83D\uDCB0 <strong>Order Total:</strong> <strong>").append(finalPrice).append(" MDL </strong> \uD83D\uDE32");
         InlineKeyboardMarkup markupInline = orderService.buildKeyboardOrderPreConfirm(languageProperties);
         sendMessageKeyboard(chatId, text.toString(), markupInline);
     }
@@ -596,21 +729,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         Language languageProperties = getLanguageProperties(language);
         InlineKeyboardMarkup markupInline = productService.buildKeyboardProductQuantity(productId, languageProperties);
         sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getTextQuantity();
+        String answer = languageProperties.getTextQuantity().replaceAll("/n", System.lineSeparator());
         sendMessageKeyboard(chatId, answer, markupInline);
     }
 
-    private void buildCategoryByProduct(Long chatId, String callbackId, String callbackData) {
-        String productId = getIdFromCallback(callbackData);
-        var categoryId = productService.getCategoryByProductId(Long.parseLong(productId));
-        var productList = productService.findAllByCategories(categoryId);
-        String language = userService.getUserLanguage(chatId);
-        Language languageProperties = getLanguageProperties(language);
-        InlineKeyboardMarkup markupInline = productService.buildKeyboardProductByCategory(productList, languageProperties);
-        sendMessageCallback(callbackId, "Loading…", false);
-        String answer = languageProperties.getCategoryByProduct();
-        sendMessageKeyboard(chatId, answer, markupInline);
-    }
 
     private void buyProduct(Long chatId, String callbackId, String callbackData) {
         String productId = getIdFromCallback(callbackData);
@@ -618,18 +740,25 @@ public class TelegramBot extends TelegramLongPollingBot {
         var product = productService.findById(Long.parseLong(productId));
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
-        InlineKeyboardMarkup markupInline = productService.buildKeyboardProductButton(productId, languageProperties);
-        String text = UtilityService.buildDescriptionLanguage(user.getLanguage(), product);
-        text = text.replaceAll("/n", System.lineSeparator());
-        sendPhoto(chatId, callbackData);
+        InlineKeyboardMarkup markupInline = productService.buildKeyboardProductButton(product, languageProperties);
+        String textCaption = UtilityService.buildDescriptionLanguage(user.getLanguage(), product) + languageProperties.getFinalPrice() + " <b>" + product.getProductPrice() + " MDL</b>/n";
+        textCaption = textCaption.replaceAll("/n", System.lineSeparator());
+
         sendMessageCallback(callbackId, "Loading…", false);
-        sendMessageKeyboard(chatId, text, markupInline);
+
+        String textMessage = languageProperties.getProductCommand();
+        textMessage = textMessage.replaceAll("/n", System.lineSeparator());
+        textCaption = textCaption + System.lineSeparator() + textMessage;
+        sendPhoto(chatId, callbackData, textCaption, markupInline);
+
 
     }
 
-    private void buildProductsList(Long chatId, String callback_id, String callbackData) {
-        String idCategory = getIdFromCallback(callbackData);
-        var productList = productService.findAllByCategories(Long.parseLong(idCategory));
+    private void buildProductByCategoryAndDayOfWeek(Long chatId, String callback_id, String callbackData) {
+        String dayOfWeekId = getIdFromCallback(callbackData);
+        String idCategory = getCategoryId(callbackData);
+        idCategory = getIdFromCallback(idCategory);
+        var productList = productService.findAllByDayAndCategory(Long.parseLong(dayOfWeekId), Long.parseLong(idCategory));
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
         if (productList.isEmpty()) {
@@ -637,21 +766,23 @@ public class TelegramBot extends TelegramLongPollingBot {
             sendMessageCallback(callback_id, answer, true);
             return;
         }
-        String answer = languageProperties.getProductListCommand();
-        InlineKeyboardMarkup markupInline = productService.buildKeyboardProducts(productList, languageProperties);
+        String answer = languageProperties.getProductListCommand().replaceAll("/n", System.lineSeparator());
+        InlineKeyboardMarkup markupInline = productService.buildKeyboardProducts(productList, languageProperties, dayOfWeekId);
         sendMessageCallback(callback_id, "Loading…", false);
         sendMessageKeyboard(chatId, answer, markupInline);
     }
 
 
     private void menuCommandReceived(long chatId) {
-        var categoryList = categoryService.findAllByDayOfWeek(false);
+
+        var daysOfWeekList = dayOfWeekService.getAllDaysOfWeek();
         String language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
-        String answer = languageProperties.getMenuCommand();
-        boolean daysOfWeek = false;
-        InlineKeyboardMarkup markupInline = categoryService.buildKeyboardMenu(categoryList, languageProperties, daysOfWeek);
-        sendMessageKeyboard(chatId, answer, markupInline);
+        String answer = languageProperties.getMenuCommand().replaceAll("/n", System.lineSeparator());
+
+        InlineKeyboardMarkup markupInline = dayOfWeekService.buildKeyboardMenuDayOfWeek(daysOfWeekList, languageProperties);
+        sendPhoto(chatId, "menu", answer, markupInline);
+
     }
 
     public Language getLanguageProperties(String language) {
@@ -667,17 +798,46 @@ public class TelegramBot extends TelegramLongPollingBot {
         userService.registerUser(message);
     }
 
-    private void startCommandReceived(long chatId, String firstName) {
+    private void startCommandReceived(long chatId) {
         var language = userService.getUserLanguage(chatId);
         Language languageProperties = getLanguageProperties(language);
-        String answer = languageProperties.getStartCommand() + " " + firstName;
+        String answer = languageProperties.getStartCommand().replaceAll("/n", System.lineSeparator());
         ReplyKeyboard replyKeyboardMarkup = telegramService.buildKeyboardButtons(languageProperties);
         sendMessageKeyboard(chatId, answer, replyKeyboardMarkup);
 
+
+    }
+
+    public void sendInvoice(long chatId, List<LabeledPrice> products, List<Order> orders) {
+        SendInvoice invoice = new SendInvoice();
+
+        invoice.setChatId(chatId);
+        List<LabeledPrice> list = new ArrayList<>();
+        list.add(new LabeledPrice(" Pret ", 100));
+        invoice.setPrices(products);
+        invoice.setCurrency("MDL");
+        invoice.setProviderToken("6395449203:TEST:3bcdc331975ee9040578");
+        invoice.setTitle("Order Summary.");
+        invoice.setDescription("Kindly note that Telegram does not process payments directly from users, but instead works with various payment providers globally.");
+
+        StringBuilder payload = new StringBuilder();
+        for (Order order : orders) {
+            payload.append(order.getOrderId()).append("_");
+        }
+
+        invoice.setPayload(payload.toString());
+        invoice.setNeedShippingAddress(true);
+        invoice.setNeedName(true);
+        try {
+            execute(invoice);
+        } catch (TelegramApiException e) {
+            log.error("Exception :", e);
+        }
     }
 
     public void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setParseMode("HTML");
         try {
             execute(message);
             log.info("Send message : [" + message + "] , to UserId : [" + chatId + "]");
@@ -686,9 +846,12 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendPhoto(long chatId, String productId) {
+    private void sendPhoto(long chatId, String productId, String caption, InlineKeyboardMarkup markupInline) {
         SendPhoto sendPhoto = new SendPhoto();
+        sendPhoto.setCaption(caption);
+        sendPhoto.setParseMode("HTML");
         sendPhoto.setChatId(chatId);
+        sendPhoto.setReplyMarkup(markupInline);
         String fileName = productId + ".png";
         File file = new File(fileName);
         sendPhoto.setPhoto(new InputFile(file));
@@ -702,6 +865,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void sendMessageKeyboard(long chatId, String text, ReplyKeyboard markupInline) {
         SendMessage message = new SendMessage(String.valueOf(chatId), text);
+        message.setParseMode("HTML");
         message.setReplyMarkup(markupInline);
         try {
             execute(message);

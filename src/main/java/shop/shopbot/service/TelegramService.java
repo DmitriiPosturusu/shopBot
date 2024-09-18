@@ -17,13 +17,7 @@ public class TelegramService {
     public ReplyKeyboard buildKeyboardButtons(Language languageProperties) {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow keyboardRow = new KeyboardRow();
-
-        KeyboardButton keyboardButton = new KeyboardButton(languageProperties.getButtonMain());
-        keyboardRow.add(keyboardButton);
-        keyboardRows.add(keyboardRow);
-
-        keyboardRow = new KeyboardRow();
-        keyboardButton = new KeyboardButton(languageProperties.getButtonMenu());
+        KeyboardButton keyboardButton = new KeyboardButton(languageProperties.getButtonMenu());
         keyboardRow.add(keyboardButton);
         keyboardButton = new KeyboardButton(languageProperties.getButtonBag());
         keyboardRow.add(keyboardButton);
