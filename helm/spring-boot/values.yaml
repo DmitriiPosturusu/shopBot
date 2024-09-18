@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: dima01211/shopbot
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: TCP
+  port: 80
+
+
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+env:
+    SPRING_DATASOURCE_URL: "*"
+    SPRING_DATASOURCE_USERNAME: "*"
+    SPRING_DATASOURCE_PASSWORD: "*"
+    BOT_KEY: "*"
