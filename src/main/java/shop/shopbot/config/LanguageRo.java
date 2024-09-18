@@ -42,6 +42,12 @@ public class LanguageRo implements Language {
     @Value("${ro.button.delete}")
     private String buttonDelete;
 
+    @Value("${ro.text.productCommand}")
+    private String productCommand;
+
+    @Value("${ro.text.settingText}")
+    private String settingText;
+
     @Value("${ro.button.back}")
     private String buttonBack;
 

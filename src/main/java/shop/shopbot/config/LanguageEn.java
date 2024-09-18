@@ -76,6 +76,7 @@ public class LanguageEn implements Language {
     @Value("${en.text.menuCommand}")
     private String menuCommand;
 
+
     @Value("${en.text.productListCommand}")
     private String productListCommand;
 
@@ -84,6 +85,9 @@ public class LanguageEn implements Language {
 
     @Value("${en.text.categoryByProduct}")
     private String categoryByProduct;
+
+    @Value("${en.text.productCommand}")
+    private String productCommand;
 
     @Value("${en.text.quantity}")
     private String textQuantity;
@@ -133,6 +137,10 @@ public class LanguageEn implements Language {
 
     @Value("${en.text.adminCommandEdit}")
     private String adminCommandEdit;
+
+
+    @Value("${en.text.settingText}")
+    private String settingText;
 
     @Value("${en.text.weekDays}")
     private String weekDays;

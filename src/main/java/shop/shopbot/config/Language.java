@@ -48,6 +48,8 @@ public interface Language {
 
     String getCategoryByProduct();
 
+    String getProductCommand();
+
     String getTextQuantity();
 
     String getTextBuildOrder();
@@ -73,6 +75,8 @@ public interface Language {
     String getSettingCommand();
 
     String getSettingPhoneNumber();
+
+    String getSettingText();
 
     String getTextSupport();
 
