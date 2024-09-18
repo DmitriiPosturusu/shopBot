@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build & Tag Docker image
         run: |
-          docker build -t docker-spring-boot .
+          docker build -t docker-spring-boot -f Build.Dockerfile .
           docker tag docker-spring-boot:latest dima01211/shopbot:latest
       - name: Test in Docker Compose with env
         env:
