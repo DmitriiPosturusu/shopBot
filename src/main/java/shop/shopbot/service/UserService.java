@@ -72,7 +72,7 @@ public class UserService {
         user.setLastName(chat.getLastName());
         user.setPrivilege(0);
         user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
-        user.setLanguage("ro");
+        user.setLanguage("en");
         user.setPhoneNumber("0");
         log.info("saveUser [ Message : [" + message + "] ; User : [" + user + "]");
         userRepository.save(user);
@@ -91,13 +91,13 @@ public class UserService {
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
         InlineKeyboardButton keyboardButton;
-        keyboardButton = UtilityService.buildKeyboardButton("English", "setLanguageEn");
+        keyboardButton = UtilityService.buildKeyboardButton("\uD83D\uDC82 English \uD83D\uDC82", "setLanguageEn");
         rowInLine.add(keyboardButton);
-        keyboardButton = UtilityService.buildKeyboardButton("Romana", "setLanguageRo");
+        keyboardButton = UtilityService.buildKeyboardButton("\uD83E\uDDDB\uD83C\uDFFC\u200D♂\uFE0F Romana \uD83E\uDDDB\uD83C\uDFFC\u200D♂\uFE0F", "setLanguageRo");
         rowInLine.add(keyboardButton);
         rowsInLine.add(rowInLine);
         rowInLine = new ArrayList<>();
-        keyboardButton = UtilityService.buildKeyboardButton("Set phone number", "setPhoneNumber");
+        keyboardButton = UtilityService.buildKeyboardButton("☎ Set phone number ☎", "setPhoneNumber");
         rowInLine.add(keyboardButton);
         rowsInLine.add(rowInLine);
         markupInline.setKeyboard(rowsInLine);

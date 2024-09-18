@@ -36,7 +36,7 @@ public class User {
     @Column(name = "privilege")
     private Integer privilege;
 
-    @Column(name = "registerd_at")
+    @Column(name = "registered_at")
     private Timestamp registeredAt;
 
     @Column(name = "language")
