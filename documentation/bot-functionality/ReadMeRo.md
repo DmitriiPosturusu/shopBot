@@ -12,7 +12,6 @@ Pentru mai multa information despre funtionalitatea bot-lui vizitati [Bot comman
 - **Coș de cumpărături**: afișează conținutul coșului de cumpărături, permițând utilizatorilor să vadă, să modifice și să gestioneze articolele selectate.
 - **Setări personale**: Utilizatorii își pot seta limba preferată, alegând între engleză sau română si telefonul mobil.
 - **Acces la asistență**: oferă utilizatorilor o modalitate de a contacta asistența pentru asistență sau întrebări.
-- **Mesaj pentru sine**: utilizatorii își pot trimite mesaje personale pentru referințe ulterioare sau mementouri.
 
 ---
 

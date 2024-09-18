@@ -12,7 +12,6 @@ For more information about bot functionality please visit [Bot commands document
 - **Shopping Cart**: Displays the shopping cart contents, allowing users to view, modify, and manage their selected items.
 - **Personal Settings**: Users can set their preferred language, choosing between English or Romanian and set phone number.
 - **Support Access**: Provides users with a way to contact support for assistance or inquiries.
-- **Message to Self**: Users can send personal messages to themselves for future reference or reminders.
 
 ---
 
