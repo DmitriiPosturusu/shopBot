@@ -3,7 +3,7 @@ name: Docker Compose Test with Secrets
 # Trigger the workflow on push and pull request events
 on:
   workflow_run:
-    workflows: [Build and Push Docker Image]
+    workflows: [Build, Test and Push Docker Image]
     types:
       - completed
 
