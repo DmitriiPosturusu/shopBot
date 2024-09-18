@@ -19,5 +19,14 @@ public class BotConfig {
     @Value("${app.aws.s3-bucket-name}")
     private String bucketName;
 
+    @Value("${app.aws.bot-id}")
+    private String botId;
+
+    @Value("${app.aws.bot-alias-id}")
+    private String botAliasId;
+
+    @Value("${app.aws.locale-id}")
+    private String botLocaleId;
+
 
 }
