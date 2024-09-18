@@ -24,48 +24,32 @@ public class CategoryService {
     }
 
 
-    public List<Category> findAll() {
-        List<Category> categories = categoryRepository.findAll();
-        log.info("findAllCategory : [ " + categories + " ]");
-        return categories;
-    }
-
-
-    public List<Category> findAllByDayOfWeek(boolean dayOfWeek) {
-        List<Category> categories = categoryRepository.findAllByDayOfWeek(dayOfWeek);
+    public List<Category> findAllByDayOfWeek(String dayOfWeek) {
+        List<Category> categories = categoryRepository.findAllByDayOfWeeks(dayOfWeek);
         log.info("findAllByDayOfWeek : [ " + categories + " ] , dayOfWeek : [" + dayOfWeek + "] ]");
         return categories;
     }
 
 
-    public InlineKeyboardMarkup buildKeyboardMenu(List<Category> categoryList, Language languageProperties, boolean daysOfWeek) {
+    public InlineKeyboardMarkup buildKeyboardMenuCategory(List<Category> categoryList, Language languageProperties, String callbackData) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine;
         InlineKeyboardButton keyboardButton;
-        if (!daysOfWeek) {
-            keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getWeekOffer(), "getWeekOffer");
-            rowInLine.add(keyboardButton);
-            rowsInLine.add(rowInLine);
-        }
-
 
         for (Category category : categoryList) {
             rowInLine = new ArrayList<>();
             String name = UtilityService.getLanguageCategory(category, languageProperties.getLanguage());
-            String callbackData = "category_" + category.getCategoryId();
-            keyboardButton = UtilityService.buildKeyboardButton(name, callbackData);
+            String callbackDataResponse = "category_" + category.getCategoryId() + "_" + callbackData;
+            keyboardButton = UtilityService.buildKeyboardButton(name, callbackDataResponse);
             rowInLine.add(keyboardButton);
             rowsInLine.add(rowInLine);
         }
 
-
-        if (daysOfWeek){
-            rowInLine = new ArrayList<>();
-            keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backCategory");
-            rowInLine.add(keyboardButton);
-            rowsInLine.add(rowInLine);
-        }
+        rowInLine = new ArrayList<>();
+        keyboardButton = UtilityService.buildKeyboardButton(languageProperties.getButtonBack(), "backDayOfWeek");
+        rowInLine.add(keyboardButton);
+        rowsInLine.add(rowInLine);
 
 
         markupInline.setKeyboard(rowsInLine);

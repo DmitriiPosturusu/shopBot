@@ -1,12 +1,9 @@
-INSERT INTO categories (category_id, category_name_en, category_name_ro,category_day_of_week) VALUES
-(1,'Menu of the Day','Meniu Zilei',False),
-(2,'Sandwich','Sandwich',False),
-(3,'Salads','Salate',False),
-(4,'Drinks','Bauturi',False),
-(101,'Monday','Luni',True),
-(102,'Tuesday','Marti',True),
-(103,'Wednesday','Miercuri',True),
-(104,'Thursday','Joi',True),
-(105,'Friday','Vineri',True),
-(106,'Saturday','Sambata',True),
-(107,'Sunday','Duminica',True);
+INSERT INTO categories (category_id, category_name_en, category_name_ro,category_day_of_week_ids) VALUES
+(1,'📜 Menu of the Day 🍲','Meniu Zilei','1,2,3'),
+(2,'🍳 Breakfast 🥣','Mic dejun','1,2'),
+(3,'🍵 Soup 🥣','Supe','1,2,3'),
+(4,'🥪 Sandwich 🥓','Sandwich','1,2,3,4'),
+(5,'🥗 Salads 🍃','Salate','1,2'),
+(6,'🍹 Drinks 🥤','Bauturi','1,2'),
+(7,'🍰 Dessert 🥞','Desert','1');
+
