@@ -27,21 +27,21 @@ resource "aws_security_group" "allow_ssh_http" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Allow SSH from any IP address
+    cidr_blocks = ["0.0.0.0/0"] 
   }
 
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Allow HTTP from any IP address
+    cidr_blocks = ["0.0.0.0/0"]  
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]  # Allow all outbound traffic
+    cidr_blocks = ["0.0.0.0/0"] 
   }
 
   tags = {
@@ -90,7 +90,7 @@ resource "aws_iam_policy" "s3_access_policy" {
 }
 
 
-# Create IAM policy to allow EC2 instance to publish to SNS topic
+
 resource "aws_iam_policy" "ec2_sns_publish_policy" {
   name        = "ec2_sns_publish_policy"
   description = "Allow EC2 instance to publish to SNS topic"
@@ -108,7 +108,7 @@ resource "aws_iam_policy" "ec2_sns_publish_policy" {
 }
 
 
-# Attach SNS publish policy to the combined EC2 role
+
 resource "aws_iam_role_policy_attachment" "attach_sns_policy" {
   role       = aws_iam_role.ec2_combined_role.name
   policy_arn = aws_iam_policy.ec2_sns_publish_policy.arn
@@ -118,14 +118,14 @@ resource "aws_iam_role_policy_attachment" "attach_s3_policy" {
   policy_arn = aws_iam_policy.s3_access_policy.arn
 }
 
-# Create EC2 instance profile and attach the combined role
+
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "ec2_instance_profile_dev"
   role = aws_iam_role.ec2_combined_role.name
 }
 
 
-# Create EC2 instance
+
 resource "aws_instance" "my_ec2" {
   ami           = "ami-0fa8fe6f147dc938b"
   instance_type = "t2.micro"
