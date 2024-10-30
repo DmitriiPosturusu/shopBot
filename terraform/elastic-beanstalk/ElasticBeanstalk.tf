@@ -17,14 +17,14 @@ resource "aws_elastic_beanstalk_environment" "my_eb" {
     value     = var.instance_type
   }
 
-  # Setting the environment type (load balanced for prod, single for dev)
+ 
   setting {
     namespace = "aws:elasticbeanstalk:environment"
     name      = "EnvironmentType"
     value     = var.environment == "prod" ? "LoadBalanced" : "SingleInstance"
   }
 
-  # Minimum and maximum instance configuration for auto-scaling
+  
   setting {
     namespace = "aws:autoscaling:asg"
     name      = "MinSize"
