@@ -1,6 +1,4 @@
-#Create an IAM user with permissions to list all S3 buckets and manage objects (put/get) in the specific S3 bucket created.
-#Generate the access keys for the IAM user, allowing the user to interact with the bucket using their credentials.
-#Output user access key and secret key can be used in application for downloading product pictures.
+
 
 provider "aws" {
   region = "*"
